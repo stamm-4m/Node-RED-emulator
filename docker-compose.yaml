@@ -1,0 +1,69 @@
+# docker-compose.yaml
+# -----------------------------------------------------------------------------
+# Compose stack for the "penicillin_nodered" service.
+#
+# Key points:
+# - Builds the custom Node-RED image defined in Dockerfile.
+# - Uses environment variables (from .env) to configure:
+#     * External port for the Node-RED UI
+#     * InfluxDB connection (base URL, org, bucket, token)
+# - Mounts ./data to /data to persist flows, CSV batches and static assets.
+# - Attaches to a shared Docker network (stamm_net) so it can talk
+#   to an InfluxDB container in another stack.
+# -----------------------------------------------------------------------------
+
+# --------------------------- NodeRed services -----------------------
+services:
+  penicillin_nodered:
+    build: .
+    container_name: penicillin_nodered
+    restart: unless-stopped
+
+    # Map host port to internal Node-RED port (1880).
+    # NR_PORT is defined in .env (defaults to 1880 if not set).
+    ports:
+      - "${NR_PORT:-1880}:1880"
+
+    # Environment variables injected into the Node-RED runtime.
+    # These will be read by the flow using env.get("VAR_NAME")
+    # or via ${VAR_NAME} substitution in node properties.
+    environment:
+      # Timezone (adjust if needed)
+      - TZ=Europe/Paris
+
+      # Optional Node-RED flags
+      - NODE_RED_ENABLE_PROJECTS=false
+      - NODE_RED_ENABLE_SAFE_MODE=false
+
+      # ---------- InfluxDB connection ----------
+      # Base URL of the InfluxDB HTTP API.
+      - INFLUX_BASE_URL=${INFLUX_BASE_URL}
+
+      # InfluxDB organization identifier (orgID)
+      - INFLUX_ORG_ID=stamm_org
+
+      # InfluxDB bucket name where the raw STAMM data is written
+      - INFLUX_BUCKET=stamm_raw
+
+      # InfluxDB bucket name where the metadata STAMM data is written
+      - INFLUX_METADATA_BUCKET=stamm_metadata
+
+      # InfluxDB API token with write permissions to the chosen buckets
+      - INFLUX_TOKEN=${INFLUX_TOKEN}
+
+    # Persist flows, CSVs, and assets.
+    # ./data/flows.json    -> /data/flows.json
+    # ./data/batches/*.csv -> /data/batches/*.csv
+    volumes:
+      - ./data:/data
+    
+    # Attach to the shared internal network so this Node-RED instance
+    networks:
+      - stamm_net
+
+# --------------------------- Networks & volumes -----------------------
+
+networks:
+  stamm_net:
+    name: stamm_net
+    driver: bridge

@@ -1,0 +1,40 @@
+# -------------------------------------------------------------------
+# Archivos de entorno (NO subir credenciales reales)
+# -------------------------------------------------------------------
+.env
+.env.*
+!.env.example        # Mantener solo el archivo de ejemplo en el repo
+
+# -------------------------------------------------------------------
+# Node / Node-RED
+# -------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Flows y backups generados por Node-RED (si no quieres versionarlos)
+flows_*.json.backup
+*.backup
+
+# -------------------------------------------------------------------
+# Docker / logs / tmp
+# -------------------------------------------------------------------
+*.log
+*.tmp
+temp/
+tmp/
+.cache/
+
+# Volúmenes locales de datos (si los usas)
+data/
+dist/
+
+# -------------------------------------------------------------------
+# Editor / SO
+# -------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
